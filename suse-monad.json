@@ -1,0 +1,859 @@
+{
+  "meta": {
+    "project_name": "suse-monad",
+    "schema_version": "1.0.0",
+    "target_distro": "openSUSE Tumbleweed",
+    "target_release_channel": "rolling",
+    "supported_architectures": ["x86_64"]
+  },
+  "paths": {
+    "config_root": "/etc/suse-monad",
+    "log_file": "/var/log/suse-monad.log",
+    "state_file": "/var/lib/suse-monad/state.json",
+    "backup_root": "/var/lib/suse-monad/backups",
+    "xsessions_dir": "/usr/share/xsessions",
+    "session_wrapper": "/usr/local/bin/suse-monad-session"
+  },
+  "ui": {
+    "welcome_title": "Welcome to suse-monad",
+    "welcome_text": "This installer prepares an xMonad-first desktop on openSUSE Tumbleweed with practical daily-use applications and safe defaults.",
+    "x11_honesty_explanation": "Honesty note: xMonad is delivered here as an X11 session. Optional Wayland-friendly applications can be installed, but the desktop session itself is not Wayland-native.",
+    "plan_summary": "Plan: profile '{{host_profile}}' for user '{{username}}' on openSUSE Tumbleweed. Terminal '{{chosen_terminal}}', browser '{{chosen_browser}}', editor '{{chosen_editor}}', launcher '{{chosen_launcher}}'.",
+    "confirm_prompt": "Proceed with repository checks, package installation, file generation, service enablement, and verification?",
+    "final_next_steps": "Log out, choose the 'SUSE Monad' session from your display manager, and log back in. If you do not use a display manager, run 'startx' as the target user.",
+    "color": true
+  },
+  "profiles": [
+    {
+      "name": "balanced",
+      "label": "Balanced daily-driver",
+      "description": "A practical xMonad desktop with common GUI utilities, audio tools, networking, screenshots, and optional multimedia extras.",
+      "package_groups": [
+        "core_xmonad",
+        "x11_session_base",
+        "fonts",
+        "terminal",
+        "launcher",
+        "compositor",
+        "wallpaper",
+        "notifications",
+        "polkit_agent",
+        "settings_tools",
+        "audio",
+        "network",
+        "power",
+        "file_manager",
+        "archive_tools",
+        "browser",
+        "editor",
+        "media_playback",
+        "image_viewer",
+        "pdf_reader",
+        "screenshot",
+        "clipboard",
+        "productivity",
+        "printing",
+        "optional_wayland_friendly_apps",
+        "laptop_support",
+        "bluetooth",
+        "development_tools",
+        "multimedia_codecs"
+      ],
+      "features": {
+        "browser": true,
+        "bluetooth": true,
+        "printing": true,
+        "laptop_mode": true,
+        "media_tools": true,
+        "developer_tools": false,
+        "optional_wayland_friendly_apps": true,
+        "extra_fonts": true,
+        "theme_extras": true,
+        "third_party_codecs": false,
+        "system_update": false,
+        "clipboard_history": false
+      },
+      "defaults": {
+        "terminal_cmd": "alacritty",
+        "browser_cmd": "firefox",
+        "editor_cmd": "xed",
+        "file_manager_cmd": "thunar",
+        "launcher_cmd": "rofi -show drun",
+        "wallpaper_path": "/usr/share/pixmaps/suse-monad-wallpaper.jpg",
+        "mod_mask_hs": "mod4Mask",
+        "mod_key_name": "Super"
+      }
+    }
+  ],
+  "detection": {
+    "minimum_root_free_mb": 4096,
+    "detect_laptop_from_battery": true,
+    "require_network_route": true,
+    "supported_display_manager_files": ["/etc/sysconfig/displaymanager"]
+  },
+  "preflight": {
+    "require_root": true,
+    "require_network": true,
+    "backup_existing_files": true,
+    "refuse_non_tumbleweed": true
+  },
+  "repositories": [
+    {
+      "alias": "packman",
+      "url": "http://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/",
+      "auto_refresh": true,
+      "priority": 90,
+      "gpg_check": true,
+      "enabled": true,
+      "optional": true,
+      "purpose": "Additional multimedia codecs and packages when explicitly enabled by feature policy.",
+      "conditions": ["only_if_feature_enabled:third_party_codecs"]
+    }
+  ],
+  "package_groups": {
+    "core_xmonad": {
+      "packages": ["xmonad", "ghc", "ghc_xmonad_contrib", "xmobar"],
+      "conditions": ["always"]
+    },
+    "x11_session_base": {
+      "packages": ["xinit", "dbus_x11", "xdg_utils", "xdg_user_dirs"],
+      "conditions": ["always"]
+    },
+    "fonts": {
+      "packages": ["dejavu_fonts", "noto_sans_fonts", "jetbrains_mono_fonts"],
+      "conditions": ["always"]
+    },
+    "terminal": {"packages": ["alacritty"], "conditions": ["always"]},
+    "launcher": {"packages": ["rofi"], "conditions": ["always"]},
+    "compositor": {"packages": ["picom"], "conditions": ["always"]},
+    "wallpaper": {"packages": ["feh"], "conditions": ["always"]},
+    "notifications": {"packages": ["dunst"], "conditions": ["always"]},
+    "polkit_agent": {"packages": ["polkit_gnome"], "conditions": ["always"]},
+    "settings_tools": {"packages": ["lxappearance", "xfce4_settings"], "conditions": ["always"]},
+    "audio": {"packages": ["pipewire_tools", "pavucontrol", "playerctl"], "conditions": ["always"]},
+    "bluetooth": {"packages": ["blueman", "bluez_auto_enable_devices"], "conditions": ["only_if_feature_enabled:bluetooth"]},
+    "network": {"packages": ["networkmanager_applet"], "conditions": ["always"]},
+    "power": {"packages": ["xfce4_power_manager"], "conditions": ["always"]},
+    "file_manager": {"packages": ["thunar", "thunar_volman", "gvfs"], "conditions": ["always"]},
+    "archive_tools": {"packages": ["file_roller", "thunar_plugin_archive"], "conditions": ["always"]},
+    "browser": {"packages": ["firefox"], "conditions": ["only_if_feature_enabled:browser"]},
+    "editor": {"packages": ["xed"], "conditions": ["always"]},
+    "media_playback": {"packages": ["mpv"], "conditions": ["only_if_feature_enabled:media_tools"]},
+    "image_viewer": {"packages": ["viewnior"], "conditions": ["always"]},
+    "pdf_reader": {"packages": ["atril"], "conditions": ["always"]},
+    "screenshot": {"packages": ["flameshot"], "conditions": ["always"]},
+    "clipboard": {"packages": ["copyq"], "conditions": ["only_if_feature_enabled:clipboard_history"]},
+    "productivity": {"packages": ["libreoffice"], "conditions": ["always"]},
+    "optional_wayland_friendly_apps": {"packages": ["wayland_app_launcher"], "conditions": ["only_if_feature_enabled:optional_wayland_friendly_apps"]},
+    "laptop_support": {"packages": ["tlp"], "conditions": ["only_if_laptop"]},
+    "printing": {"packages": ["cups"], "conditions": ["only_if_feature_enabled:printing"]},
+    "development_tools": {"packages": ["git"], "conditions": ["only_if_feature_enabled:developer_tools"]},
+    "multimedia_codecs": {"packages": ["packman_codecs"], "conditions": ["only_if_feature_enabled:third_party_codecs"]}
+  },
+  "packages": {
+    "xmonad": {
+      "name": "xmonad",
+      "label": "xMonad window manager",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q xmonad >/dev/null 2>&1"
+    },
+    "ghc": {
+      "name": "ghc",
+      "label": "Glasgow Haskell Compiler",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q ghc >/dev/null 2>&1"
+    },
+    "ghc_xmonad_contrib": {
+      "name": "ghc-xmonad-contrib",
+      "label": "xMonad contributed modules",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q ghc-xmonad-contrib >/dev/null 2>&1"
+    },
+    "xmobar": {
+      "name": "xmobar",
+      "label": "xmobar status bar",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q xmobar >/dev/null 2>&1"
+    },
+    "xinit": {
+      "name": "xinit",
+      "label": "startx fallback support",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q xinit >/dev/null 2>&1"
+    },
+    "dbus_x11": {
+      "name": "dbus-1-x11",
+      "label": "D-Bus X11 helpers",
+      "required": true,
+      "fallback_package_names": ["dbus-1-tools"],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q dbus-1-x11 >/dev/null 2>&1 || rpm -q dbus-1-tools >/dev/null 2>&1"
+    },
+    "xdg_utils": {
+      "name": "xdg-utils",
+      "label": "xdg-open and desktop helpers",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": ["xdg-user-dirs-update || true"],
+      "verification_command": "rpm -q xdg-utils >/dev/null 2>&1"
+    },
+    "xdg_user_dirs": {
+      "name": "xdg-user-dirs",
+      "label": "User XDG directories",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": ["su - {{username}} -c 'xdg-user-dirs-update || true'"],
+      "verification_command": "rpm -q xdg-user-dirs >/dev/null 2>&1"
+    },
+    "dejavu_fonts": {
+      "name": "dejavu-fonts",
+      "label": "DejaVu fonts",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q dejavu-fonts >/dev/null 2>&1"
+    },
+    "noto_sans_fonts": {
+      "name": "google-noto-sans-fonts",
+      "label": "Noto Sans fonts",
+      "required": false,
+      "fallback_package_names": ["google-noto-fonts"],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q google-noto-sans-fonts >/dev/null 2>&1 || rpm -q google-noto-fonts >/dev/null 2>&1"
+    },
+    "jetbrains_mono_fonts": {
+      "name": "jetbrains-mono-fonts",
+      "label": "JetBrains Mono fonts",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q jetbrains-mono-fonts >/dev/null 2>&1"
+    },
+    "alacritty": {
+      "name": "alacritty",
+      "label": "Terminal emulator",
+      "required": true,
+      "fallback_package_names": ["xfce4-terminal", "xterm"],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v alacritty >/dev/null 2>&1 || command -v xfce4-terminal >/dev/null 2>&1 || command -v xterm >/dev/null 2>&1"
+    },
+    "rofi": {
+      "name": "rofi",
+      "label": "Application launcher",
+      "required": true,
+      "fallback_package_names": ["dmenu"],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v rofi >/dev/null 2>&1 || command -v dmenu_run >/dev/null 2>&1"
+    },
+    "picom": {
+      "name": "picom",
+      "label": "X11 compositor",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v picom >/dev/null 2>&1"
+    },
+    "feh": {
+      "name": "feh",
+      "label": "Wallpaper setter",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v feh >/dev/null 2>&1"
+    },
+    "dunst": {
+      "name": "dunst",
+      "label": "Notification daemon",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v dunst >/dev/null 2>&1"
+    },
+    "polkit_gnome": {
+      "name": "polkit-gnome",
+      "label": "PolicyKit authentication agent",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q polkit-gnome >/dev/null 2>&1 || [ -x /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ]"
+    },
+    "lxappearance": {
+      "name": "lxappearance",
+      "label": "GTK appearance tool",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v lxappearance >/dev/null 2>&1"
+    },
+    "xfce4_settings": {
+      "name": "xfce4-settings",
+      "label": "Display and settings helpers",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v xfsettingsd >/dev/null 2>&1 || rpm -q xfce4-settings >/dev/null 2>&1"
+    },
+    "pipewire_tools": {
+      "name": "pipewire-tools",
+      "label": "PipeWire helpers",
+      "required": false,
+      "fallback_package_names": ["wireplumber"],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q pipewire-tools >/dev/null 2>&1 || rpm -q wireplumber >/dev/null 2>&1"
+    },
+    "pavucontrol": {
+      "name": "pavucontrol",
+      "label": "Audio mixer",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v pavucontrol >/dev/null 2>&1"
+    },
+    "playerctl": {
+      "name": "playerctl",
+      "label": "Media key helper",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v playerctl >/dev/null 2>&1"
+    },
+    "blueman": {
+      "name": "blueman",
+      "label": "Bluetooth manager",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v blueman-applet >/dev/null 2>&1 || rpm -q blueman >/dev/null 2>&1"
+    },
+    "bluez_auto_enable_devices": {
+      "name": "bluez-auto-enable-devices",
+      "label": "Auto-enable Bluetooth devices",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q bluez-auto-enable-devices >/dev/null 2>&1"
+    },
+    "networkmanager_applet": {
+      "name": "NetworkManager-applet",
+      "label": "NetworkManager tray applet",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v nm-applet >/dev/null 2>&1"
+    },
+    "xfce4_power_manager": {
+      "name": "xfce4-power-manager",
+      "label": "Power manager",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v xfce4-power-manager >/dev/null 2>&1 || rpm -q xfce4-power-manager >/dev/null 2>&1"
+    },
+    "thunar": {
+      "name": "thunar",
+      "label": "File manager",
+      "required": true,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v thunar >/dev/null 2>&1"
+    },
+    "thunar_volman": {
+      "name": "thunar-volman",
+      "label": "Removable media helper",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q thunar-volman >/dev/null 2>&1"
+    },
+    "gvfs": {
+      "name": "gvfs",
+      "label": "Virtual filesystem support",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q gvfs >/dev/null 2>&1"
+    },
+    "file_roller": {
+      "name": "file-roller",
+      "label": "Archive manager",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v file-roller >/dev/null 2>&1 || rpm -q file-roller >/dev/null 2>&1"
+    },
+    "thunar_plugin_archive": {
+      "name": "thunar-plugin-archive",
+      "label": "Thunar archive integration",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q thunar-plugin-archive >/dev/null 2>&1"
+    },
+    "firefox": {
+      "name": "MozillaFirefox",
+      "label": "Firefox web browser",
+      "required": true,
+      "fallback_package_names": ["firefox-esr"],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v firefox >/dev/null 2>&1 || rpm -q MozillaFirefox >/dev/null 2>&1 || rpm -q firefox-esr >/dev/null 2>&1"
+    },
+    "xed": {
+      "name": "xed",
+      "label": "Text editor",
+      "required": false,
+      "fallback_package_names": ["mousepad", "nano"],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v xed >/dev/null 2>&1 || command -v mousepad >/dev/null 2>&1 || command -v nano >/dev/null 2>&1"
+    },
+    "mpv": {
+      "name": "mpv",
+      "label": "Media player",
+      "required": false,
+      "fallback_package_names": ["vlc"],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v mpv >/dev/null 2>&1 || command -v vlc >/dev/null 2>&1"
+    },
+    "viewnior": {
+      "name": "viewnior",
+      "label": "Image viewer",
+      "required": false,
+      "fallback_package_names": ["ristretto"],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v viewnior >/dev/null 2>&1 || command -v ristretto >/dev/null 2>&1"
+    },
+    "atril": {
+      "name": "atril",
+      "label": "PDF reader",
+      "required": false,
+      "fallback_package_names": ["evince"],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v atril >/dev/null 2>&1 || command -v evince >/dev/null 2>&1"
+    },
+    "flameshot": {
+      "name": "flameshot",
+      "label": "Screenshot tool",
+      "required": false,
+      "fallback_package_names": ["grim"],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v flameshot >/dev/null 2>&1 || command -v grim >/dev/null 2>&1"
+    },
+    "copyq": {
+      "name": "copyq",
+      "label": "Clipboard history tool",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v copyq >/dev/null 2>&1"
+    },
+    "libreoffice": {
+      "name": "libreoffice",
+      "label": "Office suite",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v libreoffice >/dev/null 2>&1 || rpm -q libreoffice >/dev/null 2>&1"
+    },
+    "wayland_app_launcher": {
+      "name": "fuzzel",
+      "label": "Optional Wayland-native launcher",
+      "required": false,
+      "fallback_package_names": ["rofi-wayland"],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q fuzzel >/dev/null 2>&1 || rpm -q rofi-wayland >/dev/null 2>&1"
+    },
+    "tlp": {
+      "name": "tlp",
+      "label": "Laptop power saving",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q tlp >/dev/null 2>&1"
+    },
+    "cups": {
+      "name": "cups",
+      "label": "Printing stack",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "rpm -q cups >/dev/null 2>&1"
+    },
+    "git": {
+      "name": "git",
+      "label": "Version control",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "official",
+      "post_install_actions": [],
+      "verification_command": "command -v git >/dev/null 2>&1"
+    },
+    "packman_codecs": {
+      "name": "opi",
+      "label": "Packman helper package",
+      "required": false,
+      "fallback_package_names": [],
+      "repository_hint": "packman",
+      "post_install_actions": [
+        "zypper -n in --from packman ffmpeg gstreamer-plugins-bad-codecs gstreamer-plugins-ugly-codecs libavcodec-full vlc-codecs || true"
+      ],
+      "verification_command": "zypper se -i ffmpeg >/dev/null 2>&1 || true"
+    }
+  },
+  "commands": {
+    "repo_verify": "zypper lr --xmlout | grep -Fq '<alias>{{repo.alias}}</alias>'",
+    "repo_add": "zypper -n ar -f -p {{repo.priority}} {{repo.url}} {{repo.alias}}",
+    "repo_refresh": "zypper -n ref {{repo.alias}}",
+    "refresh": "zypper -n ref",
+    "dist_upgrade": "zypper -n dup --allow-vendor-change --download-in-advance",
+    "install": "zypper -n in --no-recommends {{package.name}}",
+    "remove": "zypper -n rm {{package.name}}",
+    "verify": "rpm -q {{package.name}} >/dev/null 2>&1",
+    "search": "zypper -n se -x --match-exact {{package.name}} | grep -Fq '<name>{{package.name}}</name>'",
+    "service_enable": "sh -c 'if [ \"{{service.scope}}\" = \"user\" ]; then su - {{username}} -c \"systemctl --user enable {{service.name}}.service\"; else systemctl enable {{service.name}}.service; fi'",
+    "prepare": [
+      "zypper -n ref",
+      "sh -c '[ \"{{feature_system_update}}\" = \"true\" ] && zypper -n dup --allow-vendor-change --download-in-advance || true'",
+      "sh -c 'zypper -n clean --all || true'"
+    ],
+    "hooks": {
+      "before_all": [
+        "mkdir -p /var/lib/suse-monad /var/log /etc/suse-monad",
+        "touch /var/log/suse-monad.log"
+      ],
+      "after_all": [
+        "fc-cache -f >/dev/null 2>&1 || true"
+      ],
+      "before_group": [],
+      "after_group": [],
+      "before_file_write": [],
+      "after_file_write": [],
+      "before_service_enable": [],
+      "after_service_enable": [],
+      "final_success": [
+        "su - {{username}} -c 'xmonad --recompile >/dev/null 2>&1 || true'"
+      ],
+      "recovery": []
+    }
+  },
+  "files": [
+    {
+      "destination": "{{home_dir}}/.xinitrc",
+      "template": "xinitrc",
+      "owner": "{{username}}",
+      "group": "{{group_name}}",
+      "mode": "0755",
+      "overwrite": true,
+      "backup": true,
+      "conditions": ["always"]
+    },
+    {
+      "destination": "{{home_dir}}/.xsession",
+      "template": "xsession",
+      "owner": "{{username}}",
+      "group": "{{group_name}}",
+      "mode": "0755",
+      "overwrite": true,
+      "backup": true,
+      "conditions": ["always"]
+    },
+    {
+      "destination": "{{home_dir}}/.xmonad/xmonad.hs",
+      "template": "xmonad_hs",
+      "owner": "{{username}}",
+      "group": "{{group_name}}",
+      "mode": "0644",
+      "overwrite": true,
+      "backup": true,
+      "conditions": ["always"]
+    },
+    {
+      "destination": "{{home_dir}}/.config/xmobar/xmobarrc",
+      "template": "xmobar_rc",
+      "owner": "{{username}}",
+      "group": "{{group_name}}",
+      "mode": "0644",
+      "overwrite": true,
+      "backup": true,
+      "conditions": ["always"]
+    },
+    {
+      "destination": "{{home_dir}}/.config/suse-monad/autostart.sh",
+      "template": "autostart_sh",
+      "owner": "{{username}}",
+      "group": "{{group_name}}",
+      "mode": "0755",
+      "overwrite": true,
+      "backup": true,
+      "conditions": ["always"]
+    },
+    {
+      "destination": "{{home_dir}}/.config/picom/picom.conf",
+      "template": "picom_conf",
+      "owner": "{{username}}",
+      "group": "{{group_name}}",
+      "mode": "0644",
+      "overwrite": true,
+      "backup": true,
+      "conditions": ["always"]
+    },
+    {
+      "destination": "{{home_dir}}/.config/dunst/dunstrc",
+      "template": "dunst_rc",
+      "owner": "{{username}}",
+      "group": "{{group_name}}",
+      "mode": "0644",
+      "overwrite": true,
+      "backup": true,
+      "conditions": ["always"]
+    },
+    {
+      "destination": "/usr/local/bin/suse-monad-session",
+      "template": "session_wrapper",
+      "owner": "root",
+      "group": "root",
+      "mode": "0755",
+      "overwrite": true,
+      "backup": true,
+      "conditions": ["always"]
+    },
+    {
+      "destination": "/usr/share/xsessions/suse-monad.desktop",
+      "template": "xsessions_desktop",
+      "owner": "root",
+      "group": "root",
+      "mode": "0644",
+      "overwrite": true,
+      "backup": true,
+      "conditions": ["always"]
+    },
+    {
+      "destination": "{{home_dir}}/.config/suse-monad/environment",
+      "template": "environment_file",
+      "owner": "{{username}}",
+      "group": "{{group_name}}",
+      "mode": "0644",
+      "overwrite": true,
+      "backup": true,
+      "conditions": ["always"]
+    }
+  ],
+  "templates": {
+    "xinitrc": "#!/bin/sh\nexport XDG_SESSION_DESKTOP=suse-monad\nexport DESKTOP_SESSION=suse-monad\nexec /usr/local/bin/suse-monad-session\n",
+    "xsession": "#!/bin/sh\nexport XDG_SESSION_DESKTOP=suse-monad\nexport DESKTOP_SESSION=suse-monad\nexec /usr/local/bin/suse-monad-session\n",
+    "session_wrapper": "#!/bin/sh\nset -eu\nif [ -f \"$HOME/.config/suse-monad/environment\" ]; then\n  . \"$HOME/.config/suse-monad/environment\"\nfi\nexport XDG_CURRENT_DESKTOP=xmonad\nexport XDG_SESSION_DESKTOP=suse-monad\nexport DESKTOP_SESSION=suse-monad\nexport GTK_USE_PORTAL=0\nexport TERMINAL='{{chosen_terminal}}'\nexport BROWSER='{{chosen_browser}}'\nexport EDITOR='{{chosen_editor}}'\nexport XMONAD_CONFIG_DIR='$HOME/.xmonad'\nmkdir -p \"$HOME/.xmonad\" \"$HOME/.config/suse-monad\"\nif command -v dbus-update-activation-environment >/dev/null 2>&1; then\n  dbus-update-activation-environment --systemd DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP DESKTOP_SESSION >/dev/null 2>&1 || true\nfi\nexec xmonad\n",
+    "xsessions_desktop": "[Desktop Entry]\nName=SUSE Monad\nComment=xMonad session prepared by suse-monad\nExec=/usr/local/bin/suse-monad-session\nTryExec=/usr/local/bin/suse-monad-session\nType=Application\nDesktopNames=xmonad;suse-monad\n",
+    "environment_file": "export TERMINAL='{{chosen_terminal}}'\nexport BROWSER='{{chosen_browser}}'\nexport EDITOR='{{chosen_editor}}'\nexport FILE_MANAGER='{{chosen_file_manager}}'\nexport GTK_THEME='Adwaita'\nexport QT_QPA_PLATFORMTHEME='gtk3'\n",
+    "xmonad_hs": "import XMonad\nimport XMonad.Hooks.EwmhDesktops\nimport XMonad.Hooks.ManageDocks\nimport XMonad.Hooks.SetWMName\nimport XMonad.Layout.NoBorders\nimport XMonad.Layout.Spacing\nimport XMonad.Util.EZConfig\nimport XMonad.Util.SpawnOnce\nimport System.Exit\n\nmyTerminal = \"{{chosen_terminal}}\"\nmyBrowser = \"{{chosen_browser}}\"\nmyEditor = \"{{chosen_editor}}\"\nmyFiles = \"{{chosen_file_manager}}\"\nmyLauncher = \"{{chosen_launcher}}\"\nmyLocker = \"{{screen_lock_cmd}}\"\nmyShot = \"{{screenshot_cmd}}\"\nmyModMask = {{mod_mask_hs}}\n\nmyLayout = avoidStruts $ smartBorders $ spacingRaw True (Border 6 6 6 6) True (Border 6 6 6 6) True $ layoutHook def\n\nmyStartupHook = do\n  spawnOnce \"{{home_dir}}/.config/suse-monad/autostart.sh\"\n  setWMName \"LG3D\"\n\nmain :: IO ()\nmain = xmonad $ ewmhFullscreen . ewmh . docks $ def\n  { terminal = myTerminal\n  , modMask = myModMask\n  , borderWidth = 2\n  , normalBorderColor = \"#44475a\"\n  , focusedBorderColor = \"#8be9fd\"\n  , workspaces = [\"1:web\", \"2:term\", \"3:code\", \"4:files\", \"5:chat\", \"6:media\", \"7\", \"8\", \"9\"]\n  , layoutHook = myLayout\n  , startupHook = myStartupHook\n  , manageHook = manageDocks <+> manageHook def\n  } `additionalKeysP`\n  [ (\"M-<Return>\", spawn myTerminal)\n  , (\"M-p\", spawn myLauncher)\n  , (\"M-S-b\", spawn myBrowser)\n  , (\"M-S-e\", spawn myEditor)\n  , (\"M-S-f\", spawn myFiles)\n  , (\"M-S-l\", spawn myLocker)\n  , (\"M-S-s\", spawn myShot)\n  , (\"M-C-r\", spawn \"xmonad --recompile && xmonad --restart\")\n  , (\"M-S-q\", io exitSuccess)\n  ]\n",
+    "xmobar_rc": "Config { font = \"xft:DejaVu Sans Mono:size=10\"\n       , additionalFonts = []\n       , bgColor = \"#1e1e2e\"\n       , fgColor = \"#cdd6f4\"\n       , position = Top\n       , lowerOnStart = True\n       , hideOnStart = False\n       , allDesktops = True\n       , persistent = True\n       , commands = [ Run Cpu [\"-t\", \"Cpu: <total>%\", \"-L\", \"20\", \"-H\", \"80\"] 20\n                    , Run Memory [\"-t\", \"Mem: <usedratio>%\"] 20\n                    , Run Date \"%a %F %H:%M\" \"date\" 10\n                    ]\n       , sepChar = \"%\"\n       , alignSep = \"}{\"\n       , template = \"  {{host_profile}}  }{ %cpu% | %memory% | %date%  \"\n       }\n",
+    "autostart_sh": "#!/bin/sh\nset -eu\nmkdir -p \"{{home_dir}}/.cache\" \"{{home_dir}}/.config\"\nif command -v xsetroot >/dev/null 2>&1; then xsetroot -cursor_name left_ptr || true; fi\nif command -v feh >/dev/null 2>&1 && [ -e \"{{wallpaper_path}}\" ]; then\n  feh --bg-fill \"{{wallpaper_path}}\" >/dev/null 2>&1 || true\nfi\nif command -v xmobar >/dev/null 2>&1 && [ -f \"{{home_dir}}/.config/xmobar/xmobarrc\" ]; then\n  pgrep -u \"{{username}}\" -x xmobar >/dev/null 2>&1 || xmobar \"{{home_dir}}/.config/xmobar/xmobarrc\" >/dev/null 2>&1 &\nfi\nif command -v dunst >/dev/null 2>&1; then\n  pgrep -u \"{{username}}\" -x dunst >/dev/null 2>&1 || dunst >/dev/null 2>&1 &\nfi\nif command -v picom >/dev/null 2>&1; then\n  pgrep -u \"{{username}}\" -x picom >/dev/null 2>&1 || picom --config \"{{home_dir}}/.config/picom/picom.conf\" >/dev/null 2>&1 &\nfi\nif command -v nm-applet >/dev/null 2>&1; then\n  pgrep -u \"{{username}}\" -x nm-applet >/dev/null 2>&1 || nm-applet >/dev/null 2>&1 &\nfi\nif [ \"{{feature_bluetooth}}\" = \"true\" ] && command -v blueman-applet >/dev/null 2>&1; then\n  pgrep -u \"{{username}}\" -x blueman-applet >/dev/null 2>&1 || blueman-applet >/dev/null 2>&1 &\nfi\nif command -v xfsettingsd >/dev/null 2>&1; then\n  pgrep -u \"{{username}}\" -x xfsettingsd >/dev/null 2>&1 || xfsettingsd >/dev/null 2>&1 &\nfi\nif command -v xfce4-power-manager >/dev/null 2>&1; then\n  pgrep -u \"{{username}}\" -x xfce4-power-manager >/dev/null 2>&1 || xfce4-power-manager >/dev/null 2>&1 &\nfi\nif [ -x /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ]; then\n  pgrep -u \"{{username}}\" -f polkit-gnome-authentication-agent-1 >/dev/null 2>&1 || /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 >/dev/null 2>&1 &\nfi\n",
+    "picom_conf": "backend = \"glx\";\nvsync = true;\nshadow = true;\nshadow-radius = 10;\nshadow-opacity = 0.35;\ncorner-radius = 8;\nfading = true;\nfade-delta = 4;\ninactive-opacity = 1.0;\nactive-opacity = 1.0;\nuse-damage = true;\n",
+    "dunst_rc": "[global]\nmonitor = 0\nfollow = mouse\nwidth = 360\nheight = 120\noffset = 20x40\norigin = top-right\ntransparency = 10\nframe_color = \"#8be9fd\"\nseparator_color = frame\nfont = DejaVu Sans 10\nmarkup = full\nformat = \"<b>%s</b>\\n%b\"\n[urgency_low]\nbackground = \"#1e1e2e\"\nforeground = \"#cdd6f4\"\ntimeout = 5\n[urgency_normal]\nbackground = \"#1e1e2e\"\nforeground = \"#cdd6f4\"\ntimeout = 8\n[urgency_critical]\nbackground = \"#3b0f1e\"\nforeground = \"#ffffff\"\nframe_color = \"#ff5555\"\ntimeout = 0\n"
+  },
+  "xmonad": {
+    "mod_mask_hs": "mod4Mask",
+    "mod_key_name": "Super",
+    "status_bar_launch": "xmobar ~/.config/xmobar/xmobarrc",
+    "screen_lock_cmd": "loginctl lock-session",
+    "screenshot_cmd": "flameshot gui",
+    "network_applet_cmd": "nm-applet",
+    "bluetooth_applet_cmd": "blueman-applet",
+    "notifications_cmd": "dunst",
+    "compositor_cmd": "picom --config ~/.config/picom/picom.conf",
+    "wallpaper_cmd": "feh --bg-fill {{wallpaper_path}}",
+    "audio_control_cmd": "pavucontrol"
+  },
+  "session": {
+    "xsessions_dir": "/usr/share/xsessions",
+    "wrapper_path": "/usr/local/bin/suse-monad-session",
+    "register_xsession": true,
+    "install_xinitrc": true,
+    "autologin": false,
+    "environment": {
+      "XDG_CURRENT_DESKTOP": "xmonad",
+      "XDG_SESSION_DESKTOP": "suse-monad",
+      "DESKTOP_SESSION": "suse-monad"
+    }
+  },
+  "services": [
+    {"name": "NetworkManager", "scope": "system", "enabled": true, "required": false, "conditions": ["always"]},
+    {"name": "bluetooth", "scope": "system", "enabled": true, "required": false, "conditions": ["only_if_feature_enabled:bluetooth"]},
+    {"name": "cups", "scope": "system", "enabled": true, "required": false, "conditions": ["only_if_feature_enabled:printing"]},
+    {"name": "tlp", "scope": "system", "enabled": true, "required": false, "conditions": ["only_if_laptop"]}
+  ],
+  "users": {
+    "prefer_sudo_user": true,
+    "allow_prompt": false,
+    "min_uid": 1000
+  },
+  "permissions": {
+    "default_owner": "{{username}}",
+    "default_group": "{{group_name}}",
+    "default_file_mode": "0644",
+    "default_dir_mode": "0755"
+  },
+  "backups": {
+    "enabled": true,
+    "directory": "/var/lib/suse-monad/backups",
+    "max_copies": 10
+  },
+  "rollback": {
+    "restore_files_on_failure": false,
+    "remove_failed_temp_files": true
+  },
+  "verification": [
+    {
+      "type": "command_exists",
+      "description": "xmonad command is present",
+      "command": "xmonad",
+      "required": true,
+      "conditions": ["always"]
+    },
+    {
+      "type": "file_exists",
+      "description": "User xMonad configuration exists",
+      "path": "{{home_dir}}/.xmonad/xmonad.hs",
+      "required": true,
+      "conditions": ["always"]
+    },
+    {
+      "type": "file_contains",
+      "description": "xMonad config contains selected terminal",
+      "path": "{{home_dir}}/.xmonad/xmonad.hs",
+      "token": "myTerminal = \"{{chosen_terminal}}\"",
+      "required": true,
+      "conditions": ["always"]
+    },
+    {
+      "type": "file_exists",
+      "description": "X session desktop entry exists",
+      "path": "/usr/share/xsessions/suse-monad.desktop",
+      "required": true,
+      "conditions": ["always"]
+    },
+    {
+      "type": "ownership",
+      "description": "User xMonad directory belongs to target user",
+      "path": "{{home_dir}}/.xmonad/xmonad.hs",
+      "required": true,
+      "conditions": ["always"]
+    },
+    {
+      "type": "command_success",
+      "description": "xMonad can attempt recompilation",
+      "command": "su - {{username}} -c 'xmonad --recompile >/dev/null 2>&1 || true'",
+      "required": false,
+      "conditions": ["always"]
+    },
+    {
+      "type": "service_enabled",
+      "description": "NetworkManager is enabled",
+      "service": "NetworkManager",
+      "required": false,
+      "conditions": ["always"]
+    }
+  ],
+  "recovery": {
+    "general_hint": "Inspect /var/log/suse-monad.log, review the backup directory under /var/lib/suse-monad/backups, and rerun with --dry-run --verbose to inspect the plan before retrying."
+  },
+  "logging": {
+    "file": "/var/log/suse-monad.log",
+    "verbosity": "info",
+    "timestamps": true
+  },
+  "defaults": {
+    "profile": "balanced",
+    "terminal_cmd": "alacritty",
+    "browser_cmd": "firefox",
+    "editor_cmd": "xed",
+    "file_manager_cmd": "thunar",
+    "launcher_cmd": "rofi -show drun",
+    "wallpaper_path": "/usr/share/pixmaps/suse-monad-wallpaper.jpg",
+    "execution": {
+      "interactive": true,
+      "dry_run": false,
+      "continue_on_nonfatal": true,
+      "strict_mode": false,
+      "logging_verbosity": "info",
+      "command_timeout_seconds": 900,
+      "retry_count": 1
+    }
+  },
+  "conditionals": {
+    "known": [
+      "only_if_laptop",
+      "only_if_desktop",
+      "only_if_feature_enabled:<name>",
+      "only_if_file_missing:<path>",
+      "only_if_command_exists:<cmd>",
+      "only_if_package_exists:<pkg>",
+      "only_if_repo_enabled:<alias>",
+      "only_if_service_present:<name>",
+      "only_if_user_selected"
+    ]
+  },
+  "features": {
+    "browser": {"enabled": true, "label": "Install a browser"},
+    "bluetooth": {"enabled": true, "label": "Install Bluetooth support"},
+    "printing": {"enabled": true, "label": "Install printing stack"},
+    "laptop_mode": {"enabled": true, "label": "Allow laptop-specific additions"},
+    "media_tools": {"enabled": true, "label": "Install multimedia player and helpers"},
+    "developer_tools": {"enabled": false, "label": "Install development basics"},
+    "optional_wayland_friendly_apps": {"enabled": true, "label": "Install extra Wayland-friendly applications without changing the X11 session"},
+    "extra_fonts": {"enabled": true, "label": "Install extra fonts"},
+    "theme_extras": {"enabled": true, "label": "Install appearance helpers"},
+    "third_party_codecs": {"enabled": false, "label": "Enable Packman and extra codecs"},
+    "system_update": {"enabled": false, "label": "Run a full zypper dup before desktop provisioning"},
+    "clipboard_history": {"enabled": false, "label": "Install clipboard history tool"}
+  }
+}
