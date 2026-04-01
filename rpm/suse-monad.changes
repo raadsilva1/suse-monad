@@ -1,6 +1,0 @@
--------------------------------------------------------------------
-Wed Apr 01 20:30:00 UTC 2026 - you@example.invalid
-
-- Initial local RPM package for suse-monad
-- Package the suse-monad binary, default JSON policy and man page
-- Mark /etc/suse-monad/suse-monad.json as %config(noreplace)
